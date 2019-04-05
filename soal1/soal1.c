@@ -5,28 +5,34 @@
 void* factorial(void *arg);
 
 int main(int argc, char *argv[]){
-	int err, i;
+    int err, i, j, temp, arr[100];
+    int length = argc-1;
     pthread_t tid[100];
 
-    //sort
-    for (i = 1; i <= argc; i++){
-    	if(array[i]>array[i+1])
-	{
-    		temp = array[i];
-    		array[i] = array[i+1];
-    		array[i+1] = temp;
-	}
-    }//sort done;
+    // masukin argv ke array semua
+    for (i = 0; i < length; i++){
+        arr[i] = atoi(argv[i+1]);
+    }
 
-	for(i=0;i<argc;i++){
-		err = pthread_create( &(tid[i]), NULL, prime, (void*) (argv[i]));
+   //sort gan
+   for(j=0;j<length-1;j++){
+   for (i = 0; i < length-1; i++){
+    	if(arr[i]<arr[i+1]){
+            temp = arr[i];
+            arr[i] = arr[i+1];
+            arr[i+1] = temp;
+        }
+    }}//sort done;
+   
+   for(i=0;i<length;i++){
+		err = pthread_create( &(tid[i]), NULL, factorial, (void*) (arr[i]));
 		if(err){
             fprintf(stderr,"Error - pthread_create() return code: %d\n",err);
             exit(EXIT_FAILURE);
         }
 	}
 
-	for(i=0;i<argc;i++){
+	for(i=0;i<length;i++){
 		pthread_join(tid[i], NULL);
 	}
 
@@ -44,5 +50,5 @@ void* factorial(void *arg){
         result *= num;
         num--;
     }
-    printf("%d",result);
+    printf("%d\n",result);
 }
