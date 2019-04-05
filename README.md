@@ -15,11 +15,47 @@ Contoh: ./faktorial 5 3 4
   - 3! = 6 
   - 4! = 24 
   - 5! = 120
+  
+#### **PENJELASAN**
+Pertama-tama masukan semua parameter argumen ke array kita
+```c
+for (i = 0; i < length; i++){
+arr[i] = atoi(argv[i+1]);
+}
+```
 
+Berikutnya melakukan Sorting pada array
+```c
+for(j=0;j<length-1;j++){
+for (i = 0; i < length-1; i++){
+	if(arr[i]<arr[i+1]){
+	    temp = arr[i];
+	    arr[i] = arr[i+1];
+	    arr[i+1] = temp;
+	}
+}}
+```
+
+Terakhir Melakukan pemanggilan threat fungsi factorial
+```c
+void* factorial(void *arg){
+    int num = (int) arg;
+    int result;
+    
+    result = (num<0) ? 0 : 1;
+
+    printf("%d! = ",num);
+    while(num > 1){
+        result *= num;
+        num--;
+    }
+    printf("%d\n",result);
+}
+```
 
 ### <a name="no2" ></a>Nomor 2
 ---
-
+masih kesulitan . kurang menggunakan waktu yang diberikan dengan baik.
 
 
 ### <a name="no3" ></a>Nomor 3
@@ -198,5 +234,4 @@ Pada proses `pthread_create` antara threat `zipper` dan `unzipper` kita beri sel
 
 ### <a name="no5" ></a>Nomor 5
 ---
-Buatlah sebuah script bash untuk menyimpan record dalam syslog yang memenuhi
-kriteria berikut
+masih kesulitan . kurang menggunakan waktu yang diberikan dengan baik.
