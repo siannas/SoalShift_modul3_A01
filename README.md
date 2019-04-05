@@ -41,6 +41,72 @@ b. Kedua karakter memiliki status yang unik <br />
     - Spirit_Status Iraj <= 0 (Tampilkan Pesan “Iraj ikut tidur, dan bangun kesiangan bersama Agmal”) <br />
   - Syarat Menggunakan Lebih dari 1 Thread<br />
 
+#### **PENJELASAN**
+
+berikut global variabel yang dibutuhkan
+```c
+int status;
+int WakeUp_Status = 0;
+int Spirit_Status = 100;
+int Acount = 0;             // Banyak Fungsi "Agmal Ayo Bangun" dipanggil
+int Icount = 0;            // Banyak Fungsi "Iraj Ayo Tidur" dipanggil
+```
+berikut Fungsi threat Agmal untuk mengecek kondisi, Status, dan akan sleep selama 10 detik ketika Fungsi "Iraj Ayo Tidur" telah dipanggil sebanyak tiga kali.
+```c
+void* Agmal(void *arg){
+    while(status){
+        if(WakeUp_Status >= 100){
+            printf("Agmal Terbangun,mereka bangun pagi dan berolahraga\n");
+            status = 0;
+            return NULL;
+        }
+        if(Icount == 3){
+            printf("Agmal Ayo Bangun disabled 10 s\n");
+            sleep(10);
+            Icount = 0;
+        }
+    }
+    return NULL;
+}
+```
+
+berikut Fungsi threat Iraj untuk mengecek kondisi, Status, dan akan sleep selama 10 detik ketika Fungsi "Agmal Ayo Bangun" telah dipanggil sebanyak tiga kali.
+```c
+void* Iraj(void *arg){
+    while(status){
+        if(Spirit_Status <= 0){
+            printf("Iraj ikut tidur, dan bangun kesiangan bersama Agmal\n");
+            status = 0;
+            return NULL;
+        }
+        if(Acount == 3){
+            printf("Fitur Iraj Ayo Tidur disabled 10 s\n");
+            sleep(10);
+            Acount = 0;
+        }
+    }
+    return NULL;
+}
+```
+
+berikut bagian kode untuk mendapatkan inputan user. jika user mengetikkan "Agmal Ayo Bangun", maka WakeUp_Status ditambah 15. jika user mengetikkan "Iraj Ayo Tidur", maka Spirit_Status dikurang 20. 
+```c
+while(status){
+        fgets(say, sizeof(say), stdin);         //Scan input argumen
+
+        if(strcmp(say, "Agmal Ayo Bangun\n") == 0 && Acount<3){
+            Acount++;
+            WakeUp_Status += 15;
+        }
+        else if(strcmp(say, "Iraj Ayo Tidur\n") == 0 && Icount<3){
+            Icount++;
+            Spirit_Status -= 20;
+        }
+        else if(strcmp(say, "All Status\n") == 0){
+            printf("Agmal WakeUp_Status = %d\nIraj Spirit_Status = %d\n", WakeUp_Status, Spirit_Status);
+        }
+    }
+```
 
 ### <a name="no4" ></a>Nomor 4
 ---
@@ -52,6 +118,83 @@ b. Kedua karakter memiliki status yang unik <br />
   - Wajib Menggunakan Multithreading
   - Boleh menggunakan system 
 
+#### **PENJELASAN**
+
+Berikut variabel-variabel bertipe string yang akan memudahkan pemanggilan oleh `system`.
+```c
+int zipnow = 0;
+
+const char *loc []= {
+    "/home/vagrant/Documents/FolderProses1/SimpanProses1.txt",
+    "/home/vagrant/Documents/FolderProses2/SimpanProses2.txt"
+};
+const char *dir[] = {
+    "/home/vagrant/Documents/FolderProses1/",
+    "/home/vagrant/Documents/FolderProses2/"
+}; 
+
+const char *file[] = {
+    "SimpanProses1.txt",
+    "SimpanProses2.txt"
+};
+
+const char *zipped[] = {
+    "KompresProses1.zip",
+    "KompresProses2.zip"
+};
+```
+
+Berikut fungsi yang akan menjadi threat nantinya untuk membuat file `SimpanProses#.txt` yang berisi 1o baris pertama proses saat ini.
+```c
+void* createFile(void *arg){
+    int num = (int) arg;
+
+    char syn [100] = "ps -aux | head -10 > ";
+    strcat(syn, loc[num]);
+    system(syn);
+
+    zipnow=1;
+}
+```
+
+Berikut fungsi yang akan menjadi threat nantinya untuk mengkompresi file `SimpanProses#.txt` menjadi `KompresProses#.zip`.
+```c
+void* zipper(void *arg){
+    while(zipnow != 1){}
+
+    char syn [100];
+    int num = (int) arg;
+    
+    sprintf(syn,"zip -m %s %s", zipped[num], file[num]);
+    chdir(dir[num]);
+    system(syn);
+
+}
+```
+
+Berikut fungsi yang akan menjadi threat nantinya untuk mengekstraksi file dari dalam `KompresProses#.zip`.
+```c
+void* unzipper(void *arg){
+    while(zipnow != 1){}
+
+    char syn [100];
+    int num = (int) arg;
+  
+    sprintf(syn,"unzip %s %s", zipped[num], file[num]);
+    chdir(dir[num]);
+    system(syn);
+}
+```
+
+Pada proses `pthread_create` antara threat `zipper` dan `unzipper` kita beri selang waktu 15 detik;
+```c
+...
+
+	sleep(15);
+	printf("Menunggu 15 detik untuk mengekstrak kembali\n");
+
+...
+```
 
 ### <a name="no5" ></a>Nomor 5
 ---
