@@ -4,56 +4,73 @@
 #include <unistd.h>
 #include <pthread.h>
 
-char loc1 []= "/home/vagrant/Documents/FolderProses1/SimpanProses1.txt";
-char loc2  []= "/home/vagrant/Documents/FolderProses2/SimpanProses2.txt";
-const char *dir[2], *file[2]; *zipped[2];
-dir[0] = "/home/vagrant/Documents/FolderProses1/";
-dir[1] = "/home/vagrant/Documents/FolderProses2/";
+int zipnow = 0;
 
-file[0] = "SimpanProses1.txt";
-file[1] = "SimpanProses2.txt";
+const char *loc []= {
+    "/home/vagrant/Documents/FolderProses1/SimpanProses1.txt",
+    "/home/vagrant/Documents/FolderProses2/SimpanProses2.txt"
+};
+const char *dir[] = {
+    "/home/vagrant/Documents/FolderProses1/",
+    "/home/vagrant/Documents/FolderProses2/"
+}; 
 
-zipped[0] = "KompresProses1.zip";
-zipped[1] = "KompresProses2.zip";
+const char *file[] = {
+    "SimpanProses1.txt",
+    "SimpanProses2.txt"
+};
+
+const char *zipped[] = {
+    "KompresProses1.zip",
+    "KompresProses2.zip"
+}; 
 
 void* createFile(void *arg){
-    char syn [50] = "ps -aux | head -10 > ";
-    strcat(syn, loc1);
+    int num = (int) arg;
+
+    char syn [100] = "ps -aux | head -10 > ";
+    strcat(syn, loc[num]);
     system(syn);
 
-    execlp("cp","cp",loc1,loc2,NULL);
-
-    return NULL
+    zipnow=1;
 }
 
 void* zipper(void *arg){
+    while(zipnow != 1){}
+
+    char syn [100];
     int num = (int) arg;
-
+    
+    sprintf(syn,"zip -m %s %s", zipped[num], file[num]);
     chdir(dir[num]);
-    execl("/usr/bin/zip","zip","-m", zipped[num], file[num], NULL);
+    system(syn);
 
-    return NULL;
 }
 
 void* unzipper(void *arg){
+    while(zipnow != 1){}
+
+    char syn [100];
     int num = (int) arg;
-
+  
+    sprintf(syn,"unzip %s %s", zipped[num], file[num]);
     chdir(dir[num]);
-    execl("/usr/bin/unzip","unzip", zipped[num], file[num], NULL);
-
-    return NULL;
+    system(syn);
 }
+
 
 int main(){
 	int err, i;
     pthread_t tid[100];
 
     // membuat file dari ps -aux
-    err = pthread_create( &(tid[i]), NULL, createFile, NULL );
-    if(err){
-        fprintf(stderr,"Error - pthread_create() return code: %d\n",err);
-        exit(EXIT_FAILURE);
-    }
+    for(i=0;i<2;i++){
+		err = pthread_create( &(tid[i]), NULL, createFile, (void*) i );
+		if(err){
+            fprintf(stderr,"Error - pthread_create() return code: %d\n",err);
+            exit(EXIT_FAILURE);
+        }
+	}
 
     // memanggil threat zipper
 	for(i=0;i<2;i++){
@@ -64,13 +81,10 @@ int main(){
         }
 	}
 
-	for(i=0;i<2;i++){
-		pthread_join(tid[i], NULL);
-	}
+	sleep(15);
+	printf("Menunggu 15 detik untuk mengekstrak kembali\n");
 
-    sleep(15);
-
-    // memanggil threat unzipper
+    //memanggil threat unzipper
 	for(i=0;i<2;i++){
 		err = pthread_create( &(tid[i]), NULL, unzipper, (void*) i );
 		if(err){
