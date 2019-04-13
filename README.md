@@ -55,7 +55,101 @@ void* factorial(void *arg){
 
 ### <a name="no2" ></a>Nomor 2
 ---
-masih kesulitan . kurang menggunakan waktu yang diberikan dengan baik.
+#### **PENJELASAN**
+Pada implementasi server kami menggunakan 2 thread dengan alamat localhost namun berbeda portnya. kita menggunakan struct server untuk mempermudah dalam pembangunan server.
+
+```c
+struct serverInfo{
+    int port;
+    char *role;
+};
+```
+
+berikutnya membangun pointer dengan nama `int *barangku` dan kemudian kita buat shared memory-nya.
+
+```c
+key_t key = 1234;
+pthread_t tid1, tid2;
+
+int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+barang = shmat(shmid, NULL, 0);
+*barang = 0;
+```
+
+pada thread server kita beri kondisi dimana server akan bertindak sebagai penjual atau server pembeli.
+```c
+...
+
+while(1){
+char buffer[1024] = {0};
+valread = read( new_socket , buffer, 1024);
+
+if(strcmp(pt->role, "penjual") == 0){
+    if(strcmp(buffer, "tambah\n") == 0){
+	*barang += 1;
+    }
+}
+else if(strcmp(pt->role, "pembeli") == 0){
+    if(strcmp(buffer, "beli\n") == 0){
+	if(*barang<1){
+	    send(new_socket , (char*)"transaksi gagal" , strlen(hello) , 0 );
+	}else{
+	    *barang -= 1;
+	    send(new_socket , (char*)"transaksi berhasil" , strlen(hello) , 0 );
+	}
+    }
+}
+printf("%ssisa : %d\n",buffer, *barang);
+}
+```
+
+Selanjutnya kita buat file `pembeli.c` yang bertindak sebagai client pembeli. Di dalamnya kita akan membuat socket beserta akan menginput user dan menangkap respon server.
+
+```c
+...
+
+if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+	printf("\nConnection Failed \n");
+	return -1;
+}
+
+char say[30];
+while(1){
+	char buffer[1024] = {0};
+	fgets(say, sizeof(say), stdin);
+	send(sock , say , strlen(say) , 0 );
+	 //printf("say : %sA---\n", say);
+	valread = read( sock , buffer, 1024);
+	printf("%s\n",buffer );
+}
+```
+
+Barulah kita membuat file `penjual.c` yang bertindak sebagai client penjual. Di dalamnya hampir sama dengan file pembeli namun ada penambahan yaitu shared memory dan membuat thread yang setiap lima detiknya menampilkan sisa stok barang.
+
+```c
+int *barang;
+
+void* showBarang(void* arg){
+    while (1)
+    {
+        sleep(5);
+        printf("stok barang : %d\n", *barang);
+    }
+    
+}
+
+int main(){
+    ...
+    
+    key_t key = 1234;
+    int err;
+    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+    barang = shmat(shmid, NULL, 0);
+    
+    ...
+    
+}
+```
 
 
 ### <a name="no3" ></a>Nomor 3
@@ -234,4 +328,66 @@ Pada proses `pthread_create` antara threat `zipper` dan `unzipper` kita beri sel
 
 ### <a name="no5" ></a>Nomor 5
 ---
-masih kesulitan . kurang menggunakan waktu yang diberikan dengan baik.
+#### **PENJELASAN**
+Pada program ini kami menggunakan 2 file yaitu `permainan.c` dan `penjual.c`.<br />
+pada program permainan kita inisialisasi semua variabel yang dibutuhkan dan variabel yang akan dibuat shared memory-nya bersama file penjual.
+```c
+int *value;
+char a = '\0';
+
+int health=300;
+int hunger=200;
+int food_stock = 5;
+int hyg=100;
+int cd=20;
+int eat=0;
+int bath = 0;
+int aksi = 0;
+int turn = 0;
+int stop = 0;
+int opponent = 100;
+
+key_t key = 1234;
+int mem;
+struct termios old, new;
+```
+
+```c
+int main(int argc, char const *argv[]) 
+{
+    mem = shmget(key,sizeof(int),IPC_CREAT|0666);
+    value = shmat(mem,NULL,0);
+    
+    ...
+}
+```
+
+berikutnya kita buat beberapa thread dengan fungsinya masing-masing. Program akan berjalan selama nilai `hunger` > 0 , `hygiene` > 0 , `health` > 0, dan flag `stop` = 1.
+```c
+    pthread_create(&t[0],NULL,input,NULL);
+    pthread_create(&t[1],NULL,hunger_status,NULL);
+    pthread_create(&t[2],NULL,health_status,NULL);
+    pthread_create(&t[3],NULL,hygiene_status,NULL);
+    pthread_create(&t[4],NULL,interface,NULL);
+
+    while(hunger>0&&hyg>0&&health>0&&!stop);
+```
+
+Ada penambahan fungsi yaitu `getch()` untuk mendapatkan satu input tanpa perlu menekan tombol enter.
+```c
+char getch() 
+{
+    char ch;
+    tcgetattr(0, &old); /* grab old terminal i/o settings */
+    new = old; /* make new settings same as old settings */
+    new.c_lflag &= ~ICANON; /* disable buffered i/o */
+    // new.c_lflag |= ECHO; /* set echo mode */
+    new.c_lflag &= ~ECHO; /* set no echo mode */
+    tcsetattr(0, TCSANOW, &new); /* use these new terminal i/o settings now */
+    ch = getchar();
+    tcsetattr(0, TCSANOW, &old);
+    return ch;
+}
+```
+
+Berikutnya pada file `penjual.c` kita akan membuat shared memory yang sama dengan di server.
