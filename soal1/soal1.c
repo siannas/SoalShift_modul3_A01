@@ -30,18 +30,14 @@ int main(int argc, char *argv[]){
             fprintf(stderr,"Error - pthread_create() return code: %d\n",err);
             exit(EXIT_FAILURE);
         }
+        pthread_join(tid[i], NULL);
 	}
-
-	for(i=0;i<length;i++){
-		pthread_join(tid[i], NULL);
-	}
-
 	return 0;
 }
 
 void* factorial(void *arg){
     int num = (int) arg;
-    int result;
+    unsigned int result;
     
     result = (num<0) ? 0 : 1;
 
@@ -50,5 +46,5 @@ void* factorial(void *arg){
         result *= num;
         num--;
     }
-    printf("%d\n",result);
+    printf("%u\n",result);
 }

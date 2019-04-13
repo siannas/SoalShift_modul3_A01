@@ -20,7 +20,7 @@ void* Agmal(void *arg)
         }
 
         if(Icount == 3){
-            printf("Agmal Ayo Bangun disabled 10 s\n");
+            printf("Fitur Iraj Ayo Tidur disabled 10 s\n");
             sleep(10);
             Icount = 0;
         }
@@ -40,7 +40,7 @@ void* Iraj(void *arg)
         }
 
         if(Acount == 3){
-            printf("Fitur Iraj Ayo Tidur disabled 10 s\n");
+            printf("Agmal Ayo Bangun disabled 10 s\n");
             sleep(10);
             Acount = 0;
         }
@@ -63,11 +63,11 @@ int main(void)
 	printf("-----------\n");
 
         if(strcmp(say, "Agmal Ayo Bangun\n") == 0 && Acount<3){
-            Acount++;
+            Icount++;
             WakeUp_Status += 15;
         }
         else if(strcmp(say, "Iraj Ayo Tidur\n") == 0 && Icount<3){
-            Icount++;
+            Acount++;
             Spirit_Status -= 20;
         }
         else if(strcmp(say, "All Status\n") == 0){
